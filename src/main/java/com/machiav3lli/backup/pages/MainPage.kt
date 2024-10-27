@@ -18,7 +18,6 @@
 package com.machiav3lli.backup.pages
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -26,13 +25,13 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -44,21 +43,24 @@ import com.machiav3lli.backup.dialogs.GlobalBlockListDialogUI
 import com.machiav3lli.backup.ui.compose.blockBorderBottom
 import com.machiav3lli.backup.ui.compose.icons.Phosphor
 import com.machiav3lli.backup.ui.compose.icons.phosphor.GearSix
+import com.machiav3lli.backup.ui.compose.icons.phosphor.MagnifyingGlass
 import com.machiav3lli.backup.ui.compose.icons.phosphor.Prohibit
-import com.machiav3lli.backup.ui.compose.item.ExpandableSearchAction
+import com.machiav3lli.backup.ui.compose.item.MainTopBar
 import com.machiav3lli.backup.ui.compose.item.RefreshButton
 import com.machiav3lli.backup.ui.compose.item.RoundButton
-import com.machiav3lli.backup.ui.compose.item.TopBar
 import com.machiav3lli.backup.ui.compose.recycler.FullScreenBackground
 import com.machiav3lli.backup.ui.navigation.NavItem
 import com.machiav3lli.backup.ui.navigation.NeoNavigationSuiteScaffold
 import com.machiav3lli.backup.ui.navigation.SlidePager
+import com.machiav3lli.backup.viewmodels.MainVM
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun MainPage(
     navController: NavHostController,
+    viewModel: MainVM = koinViewModel(),
 ) {
     val scope = rememberCoroutineScope()
     val pages = persistentListOf(
@@ -74,11 +76,7 @@ fun MainPage(
         OABX.main?.finishAffinity()
     }
 
-    var query by rememberSaveable {
-        mutableStateOf(
-            OABX.main?.viewModel?.searchQuery?.value ?: ""
-        )
-    }
+    val query by viewModel.searchQuery.collectAsState("")
 
     FullScreenBackground {
         NeoNavigationSuiteScaffold(
@@ -100,8 +98,16 @@ fun MainPage(
                 contentColor = MaterialTheme.colorScheme.onSurface,
                 topBar = {
                     Column {
-                        TopBar(
-                            title = stringResource(id = currentPage.title)
+                        MainTopBar(
+                            title = stringResource(id = currentPage.title),
+                            expanded = searchExpanded,
+                            query = query,
+                            onQueryChanged = { newQuery ->
+                                viewModel.setSearchQuery(newQuery)
+                            },
+                            onClose = {
+                                viewModel.setSearchQuery("")
+                            }
                         ) {
                             when (currentPage.destination) {
                                 NavItem.Scheduler.destination -> {
@@ -116,28 +122,16 @@ fun MainPage(
                                 }
 
                                 else                          -> {
-                                    ExpandableSearchAction(
-                                        expanded = searchExpanded,
-                                        query = query,
-                                        onQueryChanged = { newQuery ->
-                                            //if (newQuery != query)  // empty string doesn't work...
-                                            query = newQuery
-                                            OABX.main?.viewModel?.searchQuery?.value = query
-                                        },
-                                        onClose = {
-                                            query = ""
-                                            OABX.main?.viewModel?.searchQuery?.value = ""
-                                        }
+                                    RoundButton(
+                                        icon = Phosphor.MagnifyingGlass,
+                                        description = stringResource(id = R.string.search),
+                                        onClick = { searchExpanded.value = true }
                                     )
-                                    AnimatedVisibility(!searchExpanded.value) {
-                                        RefreshButton { OABX.main?.refreshPackagesAndBackups() }
-                                    }
-                                    AnimatedVisibility(!searchExpanded.value) {
-                                        RoundButton(
-                                            description = stringResource(id = R.string.prefs_title),
-                                            icon = Phosphor.GearSix
-                                        ) { navController.navigate(NavItem.Prefs.destination) }
-                                    }
+                                    RefreshButton { OABX.main?.refreshPackagesAndBackups() }
+                                    RoundButton(
+                                        description = stringResource(id = R.string.prefs_title),
+                                        icon = Phosphor.GearSix
+                                    ) { navController.navigate(NavItem.Prefs.destination) }
                                 }
                             }
                         }
@@ -156,11 +150,10 @@ fun MainPage(
 
             if (openBlocklist.value) BaseDialog(openDialogCustom = openBlocklist) {
                 GlobalBlockListDialogUI(
-                    currentBlocklist = OABX.main?.viewModel?.getBlocklist()?.toSet()
-                        ?: emptySet(),
+                    currentBlocklist = viewModel.getBlocklist().toSet(),
                     openDialogCustom = openBlocklist,
                 ) { newSet ->
-                    OABX.main?.viewModel?.setBlocklist(newSet)
+                    viewModel.setBlocklist(newSet)
                 }
             }
         }

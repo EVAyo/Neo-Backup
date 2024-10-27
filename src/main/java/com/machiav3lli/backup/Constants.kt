@@ -31,7 +31,7 @@ const val PREFS_SHARED_PRIVATE = "com.machiav3lli.backup"
 const val ADMIN_PREFIX = "!-"
 
 val COMPRESSION_TYPES = mapOf(
-    "gz"  to "Gzip Compression",    // TODO translation?
+    "gz" to "Gzip Compression",    // TODO translation?
     "zst" to "Zstd Compression",    // TODO translation?
     "no" to "No Compression"      // TODO translation?
 )
@@ -53,6 +53,8 @@ const val PREFS_BACKUP_FILE = "${ADMIN_PREFIX}app.preferences"
 
 const val PROP_NAME = "properties"
 const val LOG_INSTANCE = "%s.log.txt"
+
+enum class MenuAction { PUT, GET, DEL }
 
 // optional millisec to include old format
 const val BACKUP_INSTANCE_REGEX_PATTERN = """\d\d\d\d-\d\d-\d\d-\d\d-\d\d-\d\d(-\d\d\d)?-user_\d+"""
@@ -203,13 +205,7 @@ val scheduleBackupModeChipItems = listOf(
 val mainBackupModeChipItems: List<ChipItem> =
     listOf(ChipItem.None).plus(scheduleBackupModeChipItems)
 
-const val MAIN_SORT_LABEL = 0
-const val MAIN_SORT_PACKAGENAME = 1
-const val MAIN_SORT_APPSIZE = 2
-const val MAIN_SORT_DATASIZE = 3
-const val MAIN_SORT_APPDATASIZE = 4
-const val MAIN_SORT_BACKUPSIZE = 5
-const val MAIN_SORT_BACKUPDATE = 6
+enum class Sort { LABEL, PACKAGENAME, APP_SIZE, DATA_SIZE, APPDATA_SIZE, BACKUP_SIZE, BACKUP_DATE }
 
 val sortChipItems = listOf(
     ChipItem.Label,
@@ -231,10 +227,7 @@ val possibleMainFilters = listOf(MAIN_FILTER_SYSTEM, MAIN_FILTER_USER, MAIN_FILT
 
 val mainFilterChipItems = listOf(ChipItem.System, ChipItem.User, ChipItem.Special)
 
-const val SPECIAL_FILTER_ALL = 0
-
-const val LAUNCHABLE_FILTER_LAUNCHABLE = 1
-const val LAUNCHABLE_FILTER_NOT = 2
+enum class LaunchableFilter { ALL, LAUNCHABLE, NOT }
 
 val launchableFilterChipItems = listOf(
     ChipItem.All,
@@ -242,8 +235,7 @@ val launchableFilterChipItems = listOf(
     ChipItem.NotLaunchable,
 )
 
-const val INSTALLED_FILTER_INSTALLED = 1
-const val INSTALLED_FILTER_NOT = 2
+enum class InstalledFilter { ALL, INSTALLED, NOT }
 
 val installedFilterChipItems = listOf(
     ChipItem.All,
@@ -251,9 +243,7 @@ val installedFilterChipItems = listOf(
     ChipItem.NotInstalled,
 )
 
-const val UPDATED_FILTER_UPDATED = 1
-const val UPDATED_FILTER_NEW = 2
-const val UPDATED_FILTER_NOT = 3
+enum class UpdatedFilter { ALL, UPDATED, NEW, NOT }
 
 val updatedFilterChipItems = listOf(
     ChipItem.All,
@@ -262,8 +252,7 @@ val updatedFilterChipItems = listOf(
     ChipItem.OldApps,
 )
 
-const val LATEST_FILTER_OLD = 1
-const val LATEST_FILTER_NEW = 2
+enum class LatestFilter { ALL, OLD, NEW }
 
 val latestFilterChipItems = listOf(
     ChipItem.All,
@@ -271,8 +260,7 @@ val latestFilterChipItems = listOf(
     ChipItem.NewBackups,
 )
 
-const val ENABLED_FILTER_ENABLED = 1
-const val ENABLED_FILTER_DISABLED = 2
+enum class EnabledFilter { ALL, ENABLED, DISABLED }
 
 val enabledFilterChipItems = listOf(
     ChipItem.All,
